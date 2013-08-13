@@ -23,14 +23,20 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
    // - Use reallocate with static memory better?
    // - Fastest with rows or column first?
    // - Use memcpy instead of copying one by one?
-   double **t = malloc(rows*sizeof(double*));
-   double *q = malloc(rows*sizeof(double));
+   rational_t **t = malloc(rows*sizeof(rational_t*));
+   rational_t *q = malloc(rows*sizeof(rational_t));
    for (i = 0; i < rows; i += 1){
-       t[i] = malloc(cols*sizeof(double));
+       t[i] = malloc(cols*sizeof(rational_t));
        q[i] = c[i];
        for(j = 0; j < cols; j += 1)
            t[i][j] = a[i][j];
    }
+
+   rational_t ZERO, ONE;
+   ZERO.num = 0;
+   ZERO.den = 1;
+   ONE.num = 1;
+   ONE.den = 1;
 
    size_t r = cols;
    size_t s = rows;
@@ -40,66 +46,71 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 
        // Determine n1 and n2.
        for(i = 0; i < r; i += 1){
-           if(t[i][r-1] > 0)
+           if(rat_cmp(&t[i][r-1], &ZERO) > 0)
                n1 += 1;
-           else if(t[i][r-1] < 0)
+           else if(rat_cmp(&t[i][r-1], &ZERO) < 0)
                n2 += 1;
        }
        n2 += n1;
 
        // Sort positive first, then negative, last 0.
        // - t_temp can be reused?
-       double **t_temp = malloc(r*sizeof(double*));
+       rational_t **t_sort = malloc(r*sizeof(rational_t*));
        size_t n1_i = 0, n2_i = n1, n3_i = n2;
        size_t cur = 0;
        while(n1_i != n1 || n2_i != n2 || n3_i != r){
-           if(t[cur][r-1] > 0)
-               t_temp[n1_i++] = t[cur];
-           else if(t[cur][r-1] < 0)
-               t_temp[n2_i++] = t[cur];
+           if(rat_cmp(&t[cur][r-1], &ZERO) > 0)
+               t_sort[n1_i++] = t[cur];
+           else if(rat_cmp(&t[cur][r-1], &ZERO) < 0)
+               t_sort[n2_i++] = t[cur];
            else
-               t_temp[n3_i++] = t[cur];
+               t_sort[n3_i++] = t[cur];
            cur++;
        }
        free(t);
-       t = t_temp;
+       t = t_sort;
        
        // - Can be done with one for-loop?
        for(i = 0; i < r; i += 1)
            for(j = 0; j < n2; j += 1)
-               t[j][i] /= t[j][r];
+               rat_div(&t[j][i], &t[j][r]);
        for(j = 0; j < n2; j += 1)
-           q[j] /= t[j][r];
+           rat_div(&q[j], &t[j][r]);
        if(r == 0){
-        double tmp = 10000000;
+        rational_t tmp;
+	tmp.num = 100000000;
+	tmp.den = 1;
         int min = 0;
 
 	int max = 0;
         for(i = 0; i < n1; i +=1)
-            if(q[i] < tmp){
-                tmp = q[i];
+            if(rat_cmp(&q[i], &tmp) < 0){
+                tmp.num = q[i].num;
+		tmp.den = q[i].den;
                 min = i;
             }
 
-	tmp = 0;
+	tmp.num = 0;
+	tmp.den = 1;
 
 	for(i = n1; i < n2; i +=1)
-            if(q[i] > tmp){
-                tmp = q[i];
+            if(rat_cmp(&q[i], &tmp) > 0 ){
+                tmp.num = q[i].num;
+		tmp.den = q[i].den;
                 max = i;
             }
        
-          if (q[max] > q[min]) //b1 > B1
+          if (rat_cmp(&q[max], &q[min]) > 0) //b1 > B1
             return false;
         for(; n2 < s; n2 += 1)
-            if(q[n2] < 0)
+            if(rat_cmp(&q[n2], &ZERO) < 0)
                 return false;
         return true;
 	}
 	size_t s_pr = s - n2 + n1 * (n2 - n1);
 	if (s_pr == 0)
 	return true;
-	
+	/*
 	double **t2 = malloc((r-1)*sizeof(double*));
        	double *q2 = malloc(s_pr*sizeof(double));
 	for (i = 0; i < r-1; i += 1)
@@ -120,13 +131,21 @@ free(t);
 free(q);
 q = q2;
 t = t2;
+*/
    }    
 }
 
-/*void print_all(double** A, double* c, size_t r, size_t c) {
-
-
-}*/
+void print_all(rational_t** A, rational_t* cc, size_t r, size_t c) {
+	int i;	
+	int j;	
+	for (i = 0; i < r; i++) {
+		rational_t* row = A[i];
+		for (j = 0; j < c; j++) {
+			printf("%d ", row[j].num);
+		}
+		printf(" = %d\n", cc[i].num);
+	}
+}
 	
 unsigned long long dt08jnpf_fm(char* aname, char* cname, int seconds)
 {
@@ -143,33 +162,32 @@ unsigned long long dt08jnpf_fm(char* aname, char* cname, int seconds)
 		exit(1);
 	}
 	
-	rational_t rat;
-	rat.num = 3;
-	rat.den = 2;
-	rat_print(&rat);
- 
-
+	
 	size_t rows, cols;
 	fscanf(afile, "%zu %zu\n", &rows, &cols);
-	double a[rows][cols];
+	rational_t **a = malloc(rows*sizeof(rational_t*));
+   	rational_t *c = malloc(rows*sizeof(rational_t));
 	fscanf(cfile, "%zu\n", &rows);
-	double c[rows];
 	size_t i, j;
 	for(i = 0; i < rows; i += 1){
-		for(j = 0; j < cols; j += 1)
-			fscanf(afile, "%lf\t", &a[i][j]);
+		a[i] = malloc(cols*sizeof(rational_t));
+		for(j = 0; j < cols; j += 1) {
+			fscanf(afile, "%d\t", &a[i][j].num);
+			a[i][j].den = 1;
+		}
 		fscanf(afile, "\n");
-		fscanf(cfile, "%lf\n", &c[i]);
+		fscanf(cfile, "%d\n", &c[i].num);
+		c[i].den = 1;
 	}
 	
-	//print_all(a,c,rows,cols)
+	print_all(a,c,rows,cols);
 
 	if (seconds == 0) {
 		/* Just run once for validation. */
 			
 		// Uncomment when your function and variables exist...
-		// return fm_elim(rows, cols, a, c);
-		return 1; // return one, i.e. has a solution for now...
+		 return fm_elim(rows, cols, a, c);
+		//return 0; // return one, i.e. has a solution for now...
 	}
 
 	/* Tell operating system to call function DONE when an ALARM comes. */
