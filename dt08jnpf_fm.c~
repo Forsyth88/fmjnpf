@@ -12,10 +12,6 @@ static void done(int unused)
 	proceed = false;
 	unused = unused;
 }
-
-static int fm_elim() {int rows, int cols, 
-
-}
 	
 unsigned long long dt08jnpf_fm(char* aname, char* cname, int seconds)
 {
