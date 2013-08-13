@@ -14,7 +14,7 @@ static void done(int unused)
 	unused = unused;
 }
 
-static int fm_elim(int rows, int cols, rational_t** A, rational_t* c) {
+static int fm_elim() (int rows, int cols, rational_t** A, rational_t* c) {
 	return 1;
 }
 	
