@@ -7,7 +7,7 @@
 
 CC	= gcc
 OUT	= fm
-OBJS	= main.o dt08jnpf_fm.o
+OBJS	= main.o dt08jnpf_fm.o rational.o
 
 all: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(OUT)

@@ -71,7 +71,7 @@ bool fm_elim(size_t rows, size_t cols, double** a, double* c)
        for(j = 0; j < n2; j += 1)
            q[j] /= t[j][r];
        if(r == 0){
-        double tmp = DBL_MAX;
+        double tmp = 10000000;
         int min = 0;
 
 	int max = 0;
@@ -122,13 +122,16 @@ q = q2;
 t = t2;
    }    
 }
+
+/*void print_all(double** A, double* c, size_t r, size_t c) {
+
+
+}*/
 	
 unsigned long long dt08jnpf_fm(char* aname, char* cname, int seconds)
 {
 	FILE*		afile = fopen(aname, "r");
 	FILE*		cfile = fopen(cname, "r");
-
-	fm_count = 0;
 
 	if (afile == NULL) {
 		fprintf(stderr, "could not open file A\n");
@@ -139,6 +142,27 @@ unsigned long long dt08jnpf_fm(char* aname, char* cname, int seconds)
 		fprintf(stderr, "could not open file c\n");
 		exit(1);
 	}
+	
+	rational_t rat;
+	rat.num = 3;
+	rat.den = 2;
+	rat_print(&rat);
+ 
+
+	size_t rows, cols;
+	fscanf(afile, "%zu %zu\n", &rows, &cols);
+	double a[rows][cols];
+	fscanf(cfile, "%zu\n", &rows);
+	double c[rows];
+	size_t i, j;
+	for(i = 0; i < rows; i += 1){
+		for(j = 0; j < cols; j += 1)
+			fscanf(afile, "%lf\t", &a[i][j]);
+		fscanf(afile, "\n");
+		fscanf(cfile, "%lf\n", &c[i]);
+	}
+	
+	//print_all(a,c,rows,cols)
 
 	if (seconds == 0) {
 		/* Just run once for validation. */
