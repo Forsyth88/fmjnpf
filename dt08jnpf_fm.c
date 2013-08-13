@@ -15,7 +15,7 @@ static void done(int unused)
 }
 
 // - Multiply every t_rj to same determinator instead?
-bool fm_elim(size_t rows, size_t cols, double** a, double* c)
+static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 {
    size_t i, j;    
 
