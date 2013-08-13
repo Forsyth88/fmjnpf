@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include "rational.h"
 
 static unsigned long long	fm_count;
 static volatile bool		proceed = false;
@@ -13,8 +14,8 @@ static void done(int unused)
 	unused = unused;
 }
 
-static int fm_elim() {int rows, int cols, 
-
+static int fm_elim() (int rows, int cols, rational** A, rational* c) {
+	return 1;
 }
 	
 unsigned long long dt08jnpf_fm(char* aname, char* cname, int seconds)
