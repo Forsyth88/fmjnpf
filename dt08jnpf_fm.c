@@ -18,30 +18,29 @@ static void done(int unused)
 // - Multiply every t_rj to same determinator instead?
 static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 {
-   size_t i, j;    
-
-   // Copying a and c
-   // - Use reallocate with static memory better?
-   // - Fastest with rows or column first?
-   // - Use memcpy instead of copying one by one?
-   rational_t **t = malloc(rows*sizeof(rational_t*));
-   rational_t *q = malloc(rows*sizeof(rational_t));
-   for (i = 0; i < rows; i += 1){
+    size_t i, j;    
+    // Copying a and c
+    // - Use reallocate with static memory better?
+    // - Fastest with rows or column first?
+    // - Use memcpy instead of copying one by one?
+    rational_t **t = malloc(rows*sizeof(rational_t*));
+    rational_t *q = malloc(rows*sizeof(rational_t));
+    for (i = 0; i < rows; i += 1){
        t[i] = malloc(cols*sizeof(rational_t));
        q[i] = c[i];
        for(j = 0; j < cols; j += 1)
            t[i][j] = a[i][j];
-   }
+    }
 
-   rational_t ZERO;
-   ZERO.num = 0;
-   ZERO.den = 1;
+    rational_t ZERO;
+    ZERO.num = 0;
+    ZERO.den = 1;
 
-   size_t r = cols;
-   size_t s = rows;
-   size_t n1 = 0;
-   size_t n2 = 0;
-   while(1){
+    size_t r = cols;
+    size_t s = rows;
+    size_t n1 = 0;
+    size_t n2 = 0;
+    while(1){
 
        // Determine n1 and n2.
        for(i = 0; i < r; i += 1){
@@ -49,32 +48,31 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
                n1 += 1;
            else if(rat_cmp(&t[i][r-1], &ZERO) < 0)
                n2 += 1;
-       }
-       n2 += n1;
-
-       // Sort positive first, then negative, last 0.
-       // - t_temp can be reused?
-       rational_t **t_sort = malloc(r*sizeof(rational_t*));
-       size_t n1_i = 0, n2_i = n1, n3_i = n2;
-       size_t cur = 0;
-       while(n1_i != n1 || n2_i != n2 || n3_i != r){
-           if(rat_cmp(&t[cur][r-1], &ZERO) > 0)
+        }
+        n2 += n1;
+        // Sort positive first, then negative, last 0.
+        // - t_temp can be reused?
+        rational_t **t_sort = malloc(r*sizeof(rational_t*));
+        size_t n1_i = 0, n2_i = n1, n3_i = n2;
+        size_t cur = 0;
+        while(n1_i != n1 || n2_i != n2 || n3_i != r){
+            if(rat_cmp(&t[cur][r-1], &ZERO) > 0)
                t_sort[n1_i++] = t[cur];
-           else if(rat_cmp(&t[cur][r-1], &ZERO) < 0)
+            else if(rat_cmp(&t[cur][r-1], &ZERO) < 0)
                t_sort[n2_i++] = t[cur];
-           else
+            else
                t_sort[n3_i++] = t[cur];
-           cur++;
-       }
-       free(t);
-       t = t_sort;
+            cur++;
+        }
+        free(t);
+        t = t_sort;
        
-       // - Can be done with one for-loop?
+        // - Can be done with one for-loop?
        	for(i = 0; i < r; i += 1)
            	for(j = 0; j < n2; j += 1)
                rat_div(&t[j][i], &t[j][r]);
        	for(j = 0; j < n2; j += 1)
-           rat_div(&q[j], &t[j][r]);
+            rat_div(&q[j], &t[j][r]);
        	if(r == 0){
        	rational_t tmp;
 		tmp.num = 100000000;
@@ -98,7 +96,7 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 				tmp.den = q[i].den;
 	            max = i;
 	        }
-       
+
 	        if (rat_cmp(&q[max], &q[min]) > 0) //b1 > B1
 	            return false;
 	        for(; n2 < s; n2 += 1)
@@ -110,29 +108,29 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 		if (s_pr == 0)
 			return true;
 		
-		// rational_t **t2 = malloc((r-1)*sizeof(rational_t*));
-	 //    rational_t *q2 = malloc(s_pr*sizeof(rational_t));
-		// for (i = 0; i < r-1; i += 1)
-	 //        t2[i] = malloc(s_pr*sizeof(rational_t));
-	 //    size_t k;
-	 //    for(i = 0; i < n1; i += 1)
-	 //        for(j = n1; j < n2; j += 1){
-		// 		rat_sub(&q[i],&q[j]);
-	 //            q2[i*(n2-n1)+j-n1] = q[i];
-	 //    		for(k = 0; k < r-1; k += 1) {
-		// 			rat_sub(&t[i][k],&t[j][k]);
-	 //                t2[i*(n2-n1)+j-n1][k] = t[i][k];  
-		// 		}     
-		// 	}
-		// for(i = n2; i < s; i += 1){
-	 //   		q2[s_pr-s+i] = q[i];
-	 //    	for(k = 0; k < r-1; k += 1)
-	 //        	t2[s_pr-s+i][k] = t[i][k];       
-		// 	}
-		// free(t);
-		// free(q);
-		// q = q2;
-		// t = t2;
+		rational_t **t2 = malloc((r-1)*sizeof(rational_t*));
+	    rational_t *q2 = malloc(s_pr*sizeof(rational_t));
+		for (i = 0; i < r-1; i += 1)
+	        t2[i] = malloc(s_pr*sizeof(rational_t));
+	    size_t k;
+	    for(i = 0; i < n1; i += 1)
+	        for(j = n1; j < n2; j += 1){
+				rat_sub(&q[i],&q[j]);
+	            q2[i*(n2-n1)+j-n1] = q[i];
+	    		for(k = 0; k < r-1; k += 1) {
+					rat_sub(&t[i][k],&t[j][k]);
+	                t2[i*(n2-n1)+j-n1][k] = t[i][k];  
+				}     
+			}
+		for(i = n2; i < s; i += 1){
+	   		q2[s_pr-s+i] = q[i];
+	    	for(k = 0; k < r-1; k += 1)
+	        	t2[s_pr-s+i][k] = t[i][k];       
+			}
+		free(t);
+		free(q);
+		q = q2;
+		t = t2;
 	}    
 }
 
@@ -199,10 +197,9 @@ unsigned long long dt08jnpf_fm(char* aname, char* cname, int seconds)
 	proceed = true;
 	while (proceed) {
 		// Uncomment when your function and variables exist...
-		// fm_elim(rows, cols, a, c);
+		fm_elim(rows, cols, a, c);
 
 		fm_count++;
 	}
-
 	return fm_count;
 }
