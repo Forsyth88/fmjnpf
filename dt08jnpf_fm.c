@@ -45,6 +45,14 @@ void print_all_rat(rational_t** A, rational_t* cc, size_t r, size_t c) {
 	}
 }
 
+static void free_all(size_t rows, rational_t** a, rational_t* c) {
+	size_t i;
+	for(i = 0; i < rows ; i++)
+		free(a[i]);
+	free(a);
+	free(c);
+}
+
 // - Multiply every t_rj to same determinator instead?
 static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 {
@@ -61,11 +69,9 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 		for(j = 0; j < cols; j += 1)
 		   t[i][j] = a[i][j];
 	}
-	printf("Heh2\n");
 	rational_t ZERO;
 	ZERO.num = 0;
 	ZERO.den = 1;
-	printf("Heh3\n");
 	//size_t r = cols;
 	//size_t s = rows;
 	size_t n1 = 0;
@@ -73,7 +79,6 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 	while(1){
 		n1 = 0;
 		n2 = 0;
-		printf("Heh4\n");
 		// Determine n1 and n2.
 		for(i = 0; i < rows; i += 1){
 			if(rat_cmp(&t[i][cols-1], &ZERO) > 0)
@@ -81,39 +86,31 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 			else if(rat_cmp(&t[i][cols-1], &ZERO) < 0)
 				n2 += 1;
 		}
-		print_all(t,q,rows,cols);
 		n2 += n1;
-		printf("Heh5\n");
 		// Sort positive first, then negative, last 0.
 		// - t_temp can be reused?
 		rational_t **t_sort = malloc(rows*sizeof(rational_t*));
 		rational_t *q_sort = malloc(rows*sizeof(rational_t));
 		size_t n1_i = 0, n2_i = n1, n3_i = n2;
 		size_t cur = 0;
-		printf("n1 = %zu, n2 = %zu, n3 = %zu\n", n1, n2, rows);   
 		while(n1_i != n1 || n2_i != n2 || n3_i != rows){
 			
 			if(rat_cmp(&t[cur][cols-1], &ZERO) > 0){
-				printf("n1\n");
 				q_sort[n1_i] = q[cur];               
 				t_sort[n1_i++] = t[cur];
 			}else if(rat_cmp(&t[cur][cols-1], &ZERO) < 0){
-				printf("n2\n");
 				q_sort[n2_i] = q[cur];
 				t_sort[n2_i++] = t[cur];
 			}else{
-				printf("n3\n");
 				q_sort[n3_i] = q[cur];
 				t_sort[n3_i++] = t[cur];
 			}
 			cur++;
 		}
-		printf("Heh7\n");
 		free(t);
 		free(q);
 		q = q_sort;
 		t = t_sort;
-		print_all(t,q,rows,cols);
 		// - Can be done with one for-loop?
 		for(j = 0; j < n2; j += 1)
 			rat_div(&q[j], &t[j][cols-1]);
@@ -121,7 +118,6 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 			for(j = 0; j < n2; j += 1)
 				rat_div(&t[j][i], &t[j][cols-1]);
 				
-		print_all_rat(t,q,rows,cols);
 		if(cols == 1){
 			rational_t tmp;
 			tmp.num = 100000000;
@@ -145,40 +141,51 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 					tmp.den = q[i].den;
 					max = i;
 				}
-
-			if (rat_cmp(&q[max], &q[min]) > 0) //b1 > B1
+			 //if b1 > B1 
+			if (rat_cmp(&q[max], &q[min]) > 0) {
+				free_all(rows, t, q);
 				return false;
+			}
+			//or there is a qj < 0 for n2+1<=j<=s
 			for(; n2 < rows; n2 += 1)
-				if(rat_cmp(&q[n2], &ZERO) < 0)
+				if(rat_cmp(&q[n2], &ZERO) < 0) {
+					free_all(rows, t, q);
 					return false;
+				}
+			free_all(rows, t, q);
 			return true;
 		}
 		size_t rows_pr = rows - n2 + n1 * (n2 - n1);
-		if (rows_pr == 0)
+		if (rows_pr == 0) {
+			free_all(rows, t, q);
 			return true;
+		}
+
 		
 		rational_t **t2 = malloc(rows_pr*sizeof(rational_t*));
 		rational_t *q2 = malloc(rows_pr*sizeof(rational_t));
 		for (i = 0; i < rows_pr; i += 1)
 			 t2[i] = malloc((cols-1)*sizeof(rational_t));
 		size_t k;
-
+		size_t q_index = 0;
 		for(i = 0; i < n1; i += 1)
 			 for(j = n1; j < n2; j += 1){
-				rat_sub(&q[i],&q[j]);
-				q2[i*(n2-n1)+j-n1] = q[i];
+				q2[q_index] = q[i];
+				rat_sub(&q2[q_index],&q[j]);
+				
 				for(k = 0; k < cols-1; k += 1) {
-					rat_sub(&t[i][k],&t[j][k]);
-					t2[i*(n2-n1)+j-n1][k] = t[i][k];  
+					t2[q_index][k] = t[i][k]; 
+					rat_sub(&t2[q_index][k],&t[j][k]);
 				}
+				q_index++;
 			}
 		for(i = n2; i < rows; i += 1){
-				q2[rows_pr-rows+i] = q[i];
+				q2[q_index] = q[i];
 			for(k = 0; k < cols-1; k += 1)
-				t2[rows_pr-rows+i][k] = t[i][k];
-			}
-		free(t);
-		free(q);
+				t2[q_index][k] = t[i][k];
+			q_index++;
+		}
+		free_all(rows, t, q);
 		q = q2;
 		t = t2;
 		cols--;
@@ -219,29 +226,28 @@ unsigned long long dt08jnpf_fm(char* aname, char* cname, int seconds)
 		assert(fscanf(cfile, "%d\n", &c[i].num)==1);
 		c[i].den = 1;
 	}
-	print_all(a,c,rows,cols);
-	printf("HEHEHEHEHE%d\n",seconds);
+	fclose(afile);
+    fclose(cfile);
+	//print_all(a,c,rows,cols);
 	if (seconds == 0) {
 		/* Just run once for validation. */
-		printf("Heh\n");
 		// Uncomment when your function and variables exist...
-		 return fm_elim(rows, cols, a, c);
+		bool result = fm_elim(rows, cols, a, c);
+		free_all(rows, a ,c);
+		return result;
 		//return 0; // return one, i.e. has a solution for now...
 	}
 
 	/* Tell operating system to call function DONE when an ALARM comes. */
-	printf("MONGO1\n");	
 	signal(SIGALRM, done);
 	alarm(seconds);
 	/* Now loop until the alarm comes... */
 	proceed = true;
-	printf("MONGO2\n");
 	while (proceed) {
 		// Uncomment when your function and variables exist...
-		// fm_elim(rows, cols, a, c);
-		printf("HAHAHA\n");
+		fm_elim(rows, cols, a, c);
 		fm_count++;
 	}
-	printf("HEJDA!\n");
+	free_all(rows,a,c);
 	return fm_count;
 }

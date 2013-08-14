@@ -3,6 +3,7 @@
 
 # the following works on any machine
 CFLAGS	= -O3 -g -Wall -Wextra -Werror -std=c99
+#CFLAGS	= -m64 -O6 -g -Wall -Wextra -Werror -std=c99
 
 
 CC	= gcc
