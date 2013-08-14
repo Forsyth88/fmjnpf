@@ -118,37 +118,37 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 		for(j = 0; j < n2; j += 1)
 			rat_div(&q[j], &t[j][cols-1]);
 		print_all_rat(t,q,rows,cols);
-		if(cols == 0){a
-		rational_t tmp;
-		tmp.num = 100000000;
-		tmp.den = 1;
-		int min = 0;
+		if(cols == 0){
+			rational_t tmp;
+			tmp.num = 100000000;
+			tmp.den = 1;
+			int min = 0;
 
-		int max = 0;
-			for(i = 0; i < n1; i +=1)
-				if(rat_cmp(&q[i], &tmp) < 0){
+			int max = 0;
+				for(i = 0; i < n1; i +=1)
+					if(rat_cmp(&q[i], &tmp) < 0){
+						tmp.num = q[i].num;
+						tmp.den = q[i].den;
+						min = i;
+					}
+
+			tmp.num = 0;
+			tmp.den = 1;
+
+			for(i = n1; i < n2; i +=1)
+				if(rat_cmp(&q[i], &tmp) > 0 ){
 					tmp.num = q[i].num;
 					tmp.den = q[i].den;
-					min = i;
+					max = i;
 				}
 
-		tmp.num = 0;
-		tmp.den = 1;
-
-		for(i = n1; i < n2; i +=1)
-			if(rat_cmp(&q[i], &tmp) > 0 ){
-				tmp.num = q[i].num;
-				tmp.den = q[i].den;
-				max = i;
-			}
-
-			if (rat_cmp(&q[max], &q[min]) > 0) //b1 > B1
-				return false;
-			for(; n2 < rows; n2 += 1)
-				if(rat_cmp(&q[n2], &ZERO) < 0)
+				if (rat_cmp(&q[max], &q[min]) > 0) //b1 > B1
 					return false;
-			return true;
-		}
+				for(; n2 < rows; n2 += 1)
+					if(rat_cmp(&q[n2], &ZERO) < 0)
+						return false;
+				return true;
+			}
 		size_t rows_pr = rows - n2 + n1 * (n2 - n1);
 		if (rows_pr == 0)
 			return true;
