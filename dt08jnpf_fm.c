@@ -48,15 +48,14 @@ void print_all_rat(rational_t** A, rational_t* cc, size_t r, size_t c) {
 // - Multiply every t_rj to same determinator instead?
 static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 {
-   size_t i, j;    
-	printf("Heh1\n");
-   // Copying a and c
-   // - Use reallocate with static memory better?
-   // - Fastest with rows or column first?
-   // - Use memcpy instead of copying one by one?
-   rational_t **t = malloc(rows*sizeof(rational_t*));
-   rational_t *q = malloc(rows*sizeof(rational_t));
-   for (i = 0; i < rows; i += 1){
+    size_t i, j;    
+    // Copying a and c
+    // - Use reallocate with static memory better?
+    // - Fastest with rows or column first?
+    // - Use memcpy instead of copying one by one?
+    rational_t **t = malloc(rows*sizeof(rational_t*));
+    rational_t *q = malloc(rows*sizeof(rational_t));
+    for (i = 0; i < rows; i += 1){
        t[i] = malloc(cols*sizeof(rational_t));
        q[i] = c[i];
        for(j = 0; j < cols; j += 1)
@@ -142,7 +141,7 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 				tmp.den = q[i].den;
 	            max = i;
 	        }
-       
+
 	        if (rat_cmp(&q[max], &q[min]) > 0) //b1 > B1
 	            return false;
 	        for(; n2 < rows; n2 += 1)
@@ -177,6 +176,7 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 		 free(q);
 		 q = q2;
 		 t = t2;
+
 	}    
 }
 
@@ -232,10 +232,17 @@ unsigned long long dt08jnpf_fm(char* aname, char* cname, int seconds)
 	printf("MONGO2\n");
 	while (proceed) {
 		// Uncomment when your function and variables exist...
+<<<<<<< HEAD
 		// fm_elim(rows, cols, a, c);
 		printf("HAHAHA\n");
 		fm_count++;
 	}
 	printf("HEJDA!\n");
+=======
+		fm_elim(rows, cols, a, c);
+
+		fm_count++;
+	}
+>>>>>>> 299d2ca68fa087bd8444b0a3062b7f665040cba6
 	return fm_count;
 }
