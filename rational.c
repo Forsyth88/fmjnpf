@@ -114,5 +114,5 @@ bool rat_set(rational_t *a)
 
 void rat_print(rational_t *a)
 {
-        printf("%d/%d\n", a->num, a->den);
+        printf("%d/%d", a->num, a->den);
 }
