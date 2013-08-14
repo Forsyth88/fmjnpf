@@ -71,6 +71,8 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 	size_t n1 = 0;
 	size_t n2 = 0;
 	while(1){
+		n1 = 0;
+		n2 = 0;
 		printf("Heh4\n");
 		// Determine n1 and n2.
 		for(i = 0; i < rows; i += 1){
@@ -79,12 +81,13 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 			else if(rat_cmp(&t[i][cols-1], &ZERO) < 0)
 				n2 += 1;
 		}
+		print_all(t,q,rows,cols);
 		n2 += n1;
 		printf("Heh5\n");
 		// Sort positive first, then negative, last 0.
 		// - t_temp can be reused?
 		rational_t **t_sort = malloc(rows*sizeof(rational_t*));
-		rational_t *c_sort = malloc(rows*sizeof(rational_t));
+		rational_t *q_sort = malloc(rows*sizeof(rational_t));
 		size_t n1_i = 0, n2_i = n1, n3_i = n2;
 		size_t cur = 0;
 		printf("n1 = %zu, n2 = %zu, n3 = %zu\n", n1, n2, rows);   
@@ -92,33 +95,34 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 			
 			if(rat_cmp(&t[cur][cols-1], &ZERO) > 0){
 				printf("n1\n");
-				c_sort[n1_i] = c[cur];               
+				q_sort[n1_i] = q[cur];               
 				t_sort[n1_i++] = t[cur];
 			}else if(rat_cmp(&t[cur][cols-1], &ZERO) < 0){
 				printf("n2\n");
-				c_sort[n2_i] = c[cur];
+				q_sort[n2_i] = q[cur];
 				t_sort[n2_i++] = t[cur];
 			}else{
 				printf("n3\n");
-				c_sort[n3_i] = c[cur];
+				q_sort[n3_i] = q[cur];
 				t_sort[n3_i++] = t[cur];
 			}
 			cur++;
 		}
 		printf("Heh7\n");
 		free(t);
-		free(c);
-		c = c_sort;
+		free(q);
+		q = q_sort;
 		t = t_sort;
-		print_all(t_sort,c,rows,cols);
+		print_all(t,q,rows,cols);
 		// - Can be done with one for-loop?
+		for(j = 0; j < n2; j += 1)
+			rat_div(&q[j], &t[j][cols-1]);
 		for(i = 0; i < cols; i += 1)
 			for(j = 0; j < n2; j += 1)
 				rat_div(&t[j][i], &t[j][cols-1]);
-		for(j = 0; j < n2; j += 1)
-			rat_div(&q[j], &t[j][cols-1]);
+				
 		print_all_rat(t,q,rows,cols);
-		if(cols == 0){
+		if(cols == 1){
 			rational_t tmp;
 			tmp.num = 100000000;
 			tmp.den = 1;
@@ -142,29 +146,30 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 					max = i;
 				}
 
-				if (rat_cmp(&q[max], &q[min]) > 0) //b1 > B1
+			if (rat_cmp(&q[max], &q[min]) > 0) //b1 > B1
+				return false;
+			for(; n2 < rows; n2 += 1)
+				if(rat_cmp(&q[n2], &ZERO) < 0)
 					return false;
-				for(; n2 < rows; n2 += 1)
-					if(rat_cmp(&q[n2], &ZERO) < 0)
-						return false;
-				return true;
-			}
+			return true;
+		}
 		size_t rows_pr = rows - n2 + n1 * (n2 - n1);
 		if (rows_pr == 0)
 			return true;
 		
-		rational_t **t2 = malloc((cols-1)*sizeof(rational_t*));
+		rational_t **t2 = malloc(rows_pr*sizeof(rational_t*));
 		rational_t *q2 = malloc(rows_pr*sizeof(rational_t));
-		for (i = 0; i < cols-1; i += 1)
-			 t2[i] = malloc(rows_pr*sizeof(rational_t));
+		for (i = 0; i < rows_pr; i += 1)
+			 t2[i] = malloc((cols-1)*sizeof(rational_t));
 		size_t k;
+
 		for(i = 0; i < n1; i += 1)
 			 for(j = n1; j < n2; j += 1){
 				rat_sub(&q[i],&q[j]);
-				 q2[i*(n2-n1)+j-n1] = q[i];
+				q2[i*(n2-n1)+j-n1] = q[i];
 				for(k = 0; k < cols-1; k += 1) {
 					rat_sub(&t[i][k],&t[j][k]);
-					 t2[i*(n2-n1)+j-n1][k] = t[i][k];  
+					t2[i*(n2-n1)+j-n1][k] = t[i][k];  
 				}
 			}
 		for(i = n2; i < rows; i += 1){
@@ -176,7 +181,8 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 		free(q);
 		q = q2;
 		t = t2;
-
+		cols--;
+		rows = rows_pr;
 	}
 }
 
