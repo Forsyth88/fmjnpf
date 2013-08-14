@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <assert.h>
 #include "rational.h"
 
 static unsigned long long	fm_count;
@@ -32,16 +33,14 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
            t[i][j] = a[i][j];
    }
 
-   rational_t ZERO, ONE;
+   rational_t ZERO;
    ZERO.num = 0;
    ZERO.den = 1;
-   ONE.num = 1;
-   ONE.den = 1;
 
    size_t r = cols;
    size_t s = rows;
-   size_t n1;
-   size_t n2;
+   size_t n1 = 0;
+   size_t n2 = 0;
    while(1){
 
        // Determine n1 and n2.
@@ -111,35 +110,35 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 		if (s_pr == 0)
 			return true;
 		
-		rational_t **t2 = malloc((r-1)*sizeof(rational_t*));
-	    rational_t *q2 = malloc(s_pr*sizeof(rational_t));
-		for (i = 0; i < r-1; i += 1)
-	        t2[i] = malloc(s_pr*sizeof(rational_t));
-	    int k;
-	    for(i = 0; i < n1; i += 1)
-	        for(j = n1; j < n2; j += 1){
-				rat_sub(&q[i],&q[j]);
-	            q2[i*(n2-n1)+j-n1] = q[i];
-	    		for(k = 0; k < r-1; k += 1) {
-					rat_sub(&t[i][k],&t[j][k]);
-	                t2[i*(n2-n1)+j-n1][k] = t[i][k];  
-				}     
-			}
-		for(i = n2; i < s; i += 1){
-	   		q2[s_pr-s+i] = q[i];
-	    	for(k = 0; k < r-1; k += 1)
-	        	t2[s_pr-s+i][k] = t[i][k];       
-			}
-		free(t);
-		free(q);
-		q = q2;
-		t = t2;
+		// rational_t **t2 = malloc((r-1)*sizeof(rational_t*));
+	 //    rational_t *q2 = malloc(s_pr*sizeof(rational_t));
+		// for (i = 0; i < r-1; i += 1)
+	 //        t2[i] = malloc(s_pr*sizeof(rational_t));
+	 //    size_t k;
+	 //    for(i = 0; i < n1; i += 1)
+	 //        for(j = n1; j < n2; j += 1){
+		// 		rat_sub(&q[i],&q[j]);
+	 //            q2[i*(n2-n1)+j-n1] = q[i];
+	 //    		for(k = 0; k < r-1; k += 1) {
+		// 			rat_sub(&t[i][k],&t[j][k]);
+	 //                t2[i*(n2-n1)+j-n1][k] = t[i][k];  
+		// 		}     
+		// 	}
+		// for(i = n2; i < s; i += 1){
+	 //   		q2[s_pr-s+i] = q[i];
+	 //    	for(k = 0; k < r-1; k += 1)
+	 //        	t2[s_pr-s+i][k] = t[i][k];       
+		// 	}
+		// free(t);
+		// free(q);
+		// q = q2;
+		// t = t2;
 	}    
 }
 
 void print_all(rational_t** A, rational_t* cc, size_t r, size_t c) {
-	int i;	
-	int j;	
+	size_t i;	
+	size_t j;	
 	for (i = 0; i < r; i++) {
 		rational_t* row = A[i];
 		for (j = 0; j < c; j++) {
@@ -166,19 +165,19 @@ unsigned long long dt08jnpf_fm(char* aname, char* cname, int seconds)
 	
 	
 	size_t rows, cols;
-	fscanf(afile, "%zu %zu\n", &rows, &cols);
+	assert(fscanf(afile, "%zu %zu\n", &rows, &cols)==2);
 	rational_t **a = malloc(rows*sizeof(rational_t*));
    	rational_t *c = malloc(rows*sizeof(rational_t));
-	fscanf(cfile, "%zu\n", &rows);
+	assert(fscanf(cfile, "%zu\n", &rows)==1);
 	size_t i, j;
 	for(i = 0; i < rows; i += 1){
 		a[i] = malloc(cols*sizeof(rational_t));
 		for(j = 0; j < cols; j += 1) {
-			fscanf(afile, "%d\t", &a[i][j].num);
+			assert(fscanf(afile, "%d\t", &a[i][j].num)==1);
 			a[i][j].den = 1;
 		}
-		fscanf(afile, "\n");
-		fscanf(cfile, "%d\n", &c[i].num);
+		assert(fscanf(afile, "\n")==0);
+		assert(fscanf(cfile, "%d\n", &c[i].num)==1);
 		c[i].den = 1;
 	}
 	
