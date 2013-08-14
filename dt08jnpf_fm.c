@@ -109,29 +109,31 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 	}
 	size_t s_pr = s - n2 + n1 * (n2 - n1);
 	if (s_pr == 0)
-	return true;
-	/*
-	double **t2 = malloc((r-1)*sizeof(double*));
-       	double *q2 = malloc(s_pr*sizeof(double));
+		return true;
+	
+	rational_t **t2 = malloc((r-1)*sizeof(rational_t*));
+    rational_t *q2 = malloc(s_pr*sizeof(rational_t));
 	for (i = 0; i < r-1; i += 1)
-          t2[i] = malloc(s_pr*sizeof(double));
+        t2[i] = malloc(s_pr*sizeof(rational_t));
     int k;
     for(i = 0; i < n1; i += 1)
         for(j = n1; j < n2; j += 1){
-            q2[i*(n2-n1)+j-n1] = q[i] - q[j];
-    for(k = 0; k < r-1; k += 1)
-                t2[i*(n2-n1)+j-n1][k] = t[i][k] - t[j][k];       
-}
-for(i = n2; i < s; i += 1){
-    q2[s_pr-s+i] = q[i];
-    for(k = 0; k < r-1; k += 1)
-        t2[s_pr-s+i][k] = t[i][k];       
-}
-free(t);
-free(q);
-q = q2;
-t = t2;
-*/
+			rat_sub(&q[i],&q[j]);
+            q2[i*(n2-n1)+j-n1] = q[i];
+    		for(k = 0; k < r-1; k += 1) {
+				rat_sub(&t[i][k],&t[j][k]);
+                t2[i*(n2-n1)+j-n1][k] = t[i][k];  
+			}     
+		}
+	for(i = n2; i < s; i += 1){
+   		q2[s_pr-s+i] = q[i];
+    	for(k = 0; k < r-1; k += 1)
+        	t2[s_pr-s+i][k] = t[i][k];       
+		}
+	free(t);
+	free(q);
+	q = q2;
+	t = t2;
    }    
 }
 
