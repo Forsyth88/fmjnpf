@@ -76,9 +76,11 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 	//size_t s = rows;
 	size_t n1 = 0;
 	size_t n2 = 0;
+	
 	while(1){
 		n1 = 0;
 		n2 = 0;
+		
 		// Determine n1 and n2.
 		for(i = 0; i < rows; i += 1){
 			if(rat_cmp(&t[i][cols-1], &ZERO) > 0)
@@ -87,14 +89,16 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 				n2 += 1;
 		}
 		n2 += n1;
+		
+		
+
 		// Sort positive first, then negative, last 0.
 		// - t_temp can be reused?
 		rational_t **t_sort = malloc(rows*sizeof(rational_t*));
 		rational_t *q_sort = malloc(rows*sizeof(rational_t));
 		size_t n1_i = 0, n2_i = n1, n3_i = n2;
 		size_t cur = 0;
-		while(n1_i != n1 || n2_i != n2 || n3_i != rows){
-			
+		while(cur != rows){
 			if(rat_cmp(&t[cur][cols-1], &ZERO) > 0){
 				q_sort[n1_i] = q[cur];               
 				t_sort[n1_i++] = t[cur];
@@ -106,17 +110,21 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 				t_sort[n3_i++] = t[cur];
 			}
 			cur++;
-		}
+		}		
+				
+		
 		free(t);
 		free(q);
 		q = q_sort;
 		t = t_sort;
 		// - Can be done with one for-loop?
-		for(j = 0; j < n2; j += 1)
-			rat_div(&q[j], &t[j][cols-1]);
-		for(i = 0; i < cols; i += 1)
-			for(j = 0; j < n2; j += 1)
-				rat_div(&t[j][i], &t[j][cols-1]);
+		for(i = 0; i < n2; i += 1) {
+			rational_t* div = &t[i][cols-1];
+			rat_div(&q[i], div);
+			for(j = 0; j < cols; j += 1) {
+				rat_div(&t[i][j], div);
+			}
+		}
 				
 		if(cols == 1){
 			rational_t tmp;
