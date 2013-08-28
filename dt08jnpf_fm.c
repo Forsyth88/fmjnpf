@@ -53,14 +53,9 @@ static void free_all(size_t rows, rational_t** a, rational_t* c) {
 	free(c);
 }
 
-// - Multiply every t_rj to same determinator instead?
 static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 {
 	size_t i, j;    
-	// Copying a and c
-	// - Use reallocate with static memory better?
-	// - Fastest with rows or column first?
-	// - Use memcpy instead of copying one by one?
 	rational_t **t = malloc(rows*sizeof(rational_t*));
 	rational_t *q = malloc(rows*sizeof(rational_t));
 	for (i = 0; i < rows; i += 1){
@@ -72,8 +67,6 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 	rational_t ZERO;
 	ZERO.num = 0;
 	ZERO.den = 1;
-	//size_t r = cols;
-	//size_t s = rows;
 	size_t n1 = 0;
 	size_t n2 = 0;
 	
@@ -83,26 +76,24 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 		
 		// Determine n1 and n2.
 		for(i = 0; i < rows; i += 1){
-			if(rat_cmp(&t[i][cols-1], &ZERO) > 0)
+			int cmp = rat_cmp(&t[i][cols-1], &ZERO);
+			if(cmp > 0)
 				n1 += 1;
-			else if(rat_cmp(&t[i][cols-1], &ZERO) < 0)
+			else if(cmp < 0)
 				n2 += 1;
 		}
 		n2 += n1;
 		
-		
-
-		// Sort positive first, then negative, last 0.
-		// - t_temp can be reused?
 		rational_t **t_sort = malloc(rows*sizeof(rational_t*));
 		rational_t *q_sort = malloc(rows*sizeof(rational_t));
 		size_t n1_i = 0, n2_i = n1, n3_i = n2;
 		size_t cur = 0;
 		while(cur != rows){
-			if(rat_cmp(&t[cur][cols-1], &ZERO) > 0){
+			int cmp = rat_cmp(&t[cur][cols-1], &ZERO);
+			if(cmp > 0){
 				q_sort[n1_i] = q[cur];               
 				t_sort[n1_i++] = t[cur];
-			}else if(rat_cmp(&t[cur][cols-1], &ZERO) < 0){
+			}else if(cmp < 0){
 				q_sort[n2_i] = q[cur];
 				t_sort[n2_i++] = t[cur];
 			}else{
@@ -111,13 +102,11 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 			}
 			cur++;
 		}		
-				
 		
 		free(t);
 		free(q);
 		q = q_sort;
 		t = t_sort;
-		// - Can be done with one for-loop?
 		for(i = 0; i < n2; i += 1) {
 			rational_t* div = &t[i][cols-1];
 			rat_div(&q[i], div);
@@ -149,12 +138,12 @@ static int fm_elim(size_t rows, size_t cols, rational_t** a, rational_t* c)
 					tmp.den = q[i].den;
 					max = i;
 				}
-			 //if b1 > B1 
+
 			if (rat_cmp(&q[max], &q[min]) > 0) {
 				free_all(rows, t, q);
 				return false;
 			}
-			//or there is a qj < 0 for n2+1<=j<=s
+			
 			for(; n2 < rows; n2 += 1)
 				if(rat_cmp(&q[n2], &ZERO) < 0) {
 					free_all(rows, t, q);
